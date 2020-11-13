@@ -79,6 +79,10 @@ while True:
             add_categories.append(get_category("Pick a category to add."))
         for x in range(0, arguments[1]):
             exclude_categories.append(get_category("Pick a category to exclude."))
+
+        add_categories.sort()
+        exclude_categories.sort()
+
         print("How many videos do you want to download from that category?")
         videos = input_number(1, 1000000)#If you're downloading 1000000 porn videos what is wrong with you?
         download_categories.append((add_categories, exclude_categories, videos))

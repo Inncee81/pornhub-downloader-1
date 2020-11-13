@@ -89,8 +89,9 @@ def search_category(category, path, thread_count, download = True):
     video_pattern = "<a href=\"/view_video\\.php\\?viewkey=ph(.*?)\""
     videos = re.findall(video_pattern, content)
 
-    print(path + "/" + category_combined_name)
-    run_command("mkdir", (path + "/" + category_combined_name))
+    download_path = path + "/" + category_combined_name
+    print(download_path)
+    run_command("mkdir", (download_path,))
 
     links = []
     searchprefix = "https://www.pornhub.com/view_video.php?viewkey=ph"
