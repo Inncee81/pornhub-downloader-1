@@ -90,6 +90,7 @@ def search_category(category, path, thread_count, download = True):
     videos = re.findall(video_pattern, content)
 
     download_path = path + "/" + category_combined_name
+    download_path = download_path[0:len(download_path)-1]
     run_command("mkdir", (download_path,))
 
     links = []
