@@ -21,9 +21,7 @@ def download_thread(urls, thread_count, thread_offset, path):
 
 def run_command(command, inputs):
     bad_os = platform.system() == "Windows"
-    print(command == "mkdir")
     if command == "mkdir":
-        print("making file")
         if bad_os:
             os.system("mkdir \"" + inputs[0].replace("/", "\\").replace("\\ ", " ") + "\"")
             #C:/Windows/System\ 32 -> "C:\Windows\System 32"
