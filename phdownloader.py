@@ -12,11 +12,23 @@ def display_categories(should_number):
         to_print = ""
         if should_number:
             to_print = "(" + str(x) + ") "
-        to_print += str(download_categories[x][0][1])
-        if len(download_categories[x]) == 3:
-            to_print += " combined with " + download_categories[x][2][1]
-        to_print += ": " + str(download_categories[x][1]) + " videos set to download"
+        if len(download_categories[x][0]) > 0:
+            to_print += str(download_categories[x][0][0][1])
+        for y in range(1, len(download_categories[x][0])):
+            to_print += " combined with " + download_categories[x][0][y][1]
+        for y in range(0, len(download_categories[x][1])):
+            if len(download_categories[x][0]) > 0:
+                to_print += " with "
+            else:
+                to_print += "Literally anything with "
+            to_print += download_categories[x][1][y][1] + " excluded"
+        to_print += ": " + str(download_categories[x][2]) + " videos set to download"
         print(to_print)
+
+def get_category(message):
+    print(message)
+    category_index = input_number(0, len(possible_categories))
+    return (possible_categories[category_index][0], possible_categories[category_index][1])
 
 def input_number(smallest, largest):
     i = input()
@@ -29,8 +41,7 @@ while True:
     print("Enter in the next command (Type \"help\" for help)")
     command = input()
     if command == "help":
-        print("a: Add a new category to the list of categories to download.")
-        print("ac: Add a combined category")
+        print("a: <category count> <excluded category count>: Add a new category to download. Pornhub only allows 2 combined categories and 1 excluded category.")
         print("v: View categories to download.")
         print("r: Remove a category from the download list.")
         print("d: Downloads the videos")
@@ -39,30 +50,39 @@ while True:
         print("t: Change the number of threads to use")
         print("T: Show the number of threads to use")
     
-    if command == "a":
+    while command.startswith("a"):
+        if len(command.split()) != 3:
+            print("Wrong amount of arguments, 3 required.")
+            break
+        arguments = command.split()[1:]
+        invalid_args = False
+        for x in range(0, len(arguments)):
+            if not arguments[x].isnumeric() or int(arguments[x]) < 0:
+                print("Invalid argument, only whole numbers are allowed.")
+                invalid_args = True
+            arguments[x] = int(arguments[x])
+        if arguments[0] > 2:
+            print("Pornhub only allows for 2 combined categories.")
+            invalid_args = True
+        if arguments[1] > 1:
+            print("Pornhub only allows for 1 excluded category.")
+            invalid_args = True
+        if invalid_args:
+            break
+
         for x in range(0, len(possible_categories)):
             print(str(x) + ": " + possible_categories[x][1])
 
-        print("Pick a category to add.")
-        category_index = input_number(0, len(possible_categories))
-        category = (possible_categories[category_index][0], possible_categories[category_index][1])
+        add_categories = []
+        exclude_categories = []#This is an array for future-proofing
+        for x in range(0, arguments[0]):
+            add_categories.append(get_category("Pick a category to add."))
+        for x in range(0, arguments[1]):
+            exclude_categories.append(get_category("Pick a category to exclude."))
         print("How many videos do you want to download from that category?")
         videos = input_number(1, 1000000)#If you're downloading 1000000 porn videos what is wrong with you?
-        download_categories.append((category, videos))
-    
-    if command == "ac":
-        for x in range(0, len(possible_categories)):
-            print(str(x) + ": " + possible_categories[x][1])
-
-        print("Pick a category to add.")
-        first_category_index = input_number(0, len(possible_categories))
-        print("Pick a second category to add.")
-        second_category_index = input_number(0, len(possible_categories))
-        first_category = (possible_categories[first_category_index][0], possible_categories[first_category_index][1])
-        second_category = (possible_categories[second_category_index][0], possible_categories[second_category_index][1])
-        print("How many videos do you want to download from that category?")
-        videos = input_number(1, 1000000)#If you're downloading 1000000 porn videos what is wrong with you?
-        download_categories.append((first_category, videos, second_category))
+        download_categories.append((add_categories, exclude_categories, videos))
+        break#This is terrible practice, but python doesn't let you break out of if statements.
 
     if command == "v":
         display_categories(False)
@@ -75,10 +95,7 @@ while True:
     
     if command == "d":
         for category in download_categories:
-            if len(category) == 2:
-                search_category(category[0], category[1], download_path, thread_count)
-            else:
-                search_category(category[0], category[1], download_path, thread_count, second_category = category[2])
+            search_category(category, download_path, thread_count)
         break
 
     if command == "c":
