@@ -21,7 +21,9 @@ def download_thread(urls, thread_count, thread_offset, path):
 
 def run_command(command, inputs):
     bad_os = platform.system() == "Windows"
+    print(command == "mkdir")
     if command == "mkdir":
+        print("making file")
         if bad_os:
             os.system("mkdir \"" + inputs[0].replace("/", "\\").replace("\\ ", " ") + "\"")
             #C:/Windows/System\ 32 -> "C:\Windows\System 32"
@@ -89,7 +91,8 @@ def search_category(category, path, thread_count, download = True):
     video_pattern = "<a href=\"/view_video\\.php\\?viewkey=ph(.*?)\""
     videos = re.findall(video_pattern, content)
 
-    run_command("mkdir ", (path + "/" + category_combined_name))
+    print(path + "/" + category_combined_name)
+    run_command("mkdir", (path + "/" + category_combined_name))
 
     links = []
     searchprefix = "https://www.pornhub.com/view_video.php?viewkey=ph"
