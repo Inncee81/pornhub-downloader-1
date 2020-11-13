@@ -6,10 +6,8 @@ import html
 import threading
 import platform
 
-if platform.system() == "Windows":
-    separator = "\\"
-else:
-    separator = "/"
+separator = "/"
+space_separator = "\\ "
 
 def download_video(url):
     os.system("youtube-dl -q " + url + " --format best")
@@ -21,6 +19,24 @@ def download_thread(urls, thread_count, thread_offset, path):
         download_video(url)
         print("Just downloaded video with url https://www.pornhub.com/view_video.php?viewkey=ph" + urls[i])
 
+def run_command(command, inputs):
+    bad_os = platform.system() == "Windows"
+    if command == "mkdir":
+        if bad_os:
+            os.system("mkdir \"" + inputs[0].replace("/", "\\").replace("\\ ", " ") + "\"")
+            #C:/Windows/System\ 32 -> "C:\Windows\System 32"
+            #/ is an illegal character for windows filenames, and this relies on that fact.
+        else:
+            os.system("mkdir " + inputs[0])
+
+    if command == "mv":
+        if bad_os:
+            os.system("move \"" + inputs[0].replace("/", "\\").replace("\\ ", " ") + "\" \"" + inputs[1].replace("/", "\\").replace("\\ ", " ") + "\"")
+            #Convert paths to directories and move the file between.
+        else:
+            os.system("mv " + inputs[0] + " " + inputs[1])
+            #Do it normally because linux is perfect and OS X is not a dumpster fire.
+
 def get_categories():
     url = "https://www.pornhub.com/webmasters/categories"
     content = urlopen(url).read().decode("utf-8")
@@ -30,6 +46,9 @@ possible_categories = get_categories()
 
 def search_category(category, path, thread_count, download = True):
     #The reason for the download being there is that during testing I don't want to have to wait 5 hours for downloads to happen.
+    if platform.system() == "Windows":
+        path = path.replace("\\", "/")
+        #I want to parse linux commands into windows commands, and in order to do that I have to first generate linux commands with this. I hate windows.
     video_count = category[2]
 
     include_category_ids = []
@@ -46,16 +65,14 @@ def search_category(category, path, thread_count, download = True):
 
     category_combined_name = ""
     if len(include_category_names) >= 1:
-        category_combined_name += "include\\ "
+        category_combined_name += "include" + space_separator
         for name in include_category_names:
-            category_combined_name += name + "\\ "
+            category_combined_name += name + space_separator
 
     if len(exclude_category_names) >= 1:
-        category_combined_name += "exclude\\ "
+        category_combined_name += "exclude" + space_separator
         for name in exclude_category_names:
-            category_combined_name += name + "\\ "
-
-    print(category_combined_name)
+            category_combined_name += name + space_separator
 
     if len(category[0]) > 1:
         base_url = "https://pornhub.com/video/incategories"
@@ -71,8 +88,8 @@ def search_category(category, path, thread_count, download = True):
     content = urlopen(base_url).read().decode("utf-8")
     video_pattern = "<a href=\"/view_video\\.php\\?viewkey=ph(.*?)\""
     videos = re.findall(video_pattern, content)
-    
-    os.system("mkdir " + path + separator + category_combined_name)
+
+    run_command("mkdir ", (path + "/" + category_combined_name))
 
     links = []
     searchprefix = "https://www.pornhub.com/view_video.php?viewkey=ph"
@@ -123,11 +140,7 @@ def search_category(category, path, thread_count, download = True):
         
         for thread in threads:
             thread.join()
-            if platform.system() == "Windows":
-                command = "move"
-            else:
-                command = "mv"
-            os.system(command + " *.mp4 " + path + separator + category_combined_name)
+        run_command("mv", ("*.mp4", path + separator + category_combined_name))
 
         print("Finished download")
     print("Done")
